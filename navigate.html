@@ -1,0 +1,380 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--  <meta charset="UTF-8">-->
+<!--  <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--  <title>导航栏</title>-->
+<!--&lt;!&ndash;  <link rel="stylesheet" href="styles.css"> &lt;!&ndash; 导入CSS样式表 &ndash;&gt;&ndash;&gt;-->
+  <style>
+    /*.container {*/
+    /*  text-align: center; !* 水平居中 *!*/
+    /*}*/
+    nav {
+      background-color: #333; /* 导航栏背景色 */
+      /*display: inline-block; !* 将导航栏作为行内块元素显示 *!*/
+      display: flex; /* 将导航栏作为行内块元素显示 */
+      justify-content: center; /* 水平居中 */
+    }
+
+    #navigate_content {
+      list-style-type: none;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      display: flex; /* 使用 Flexbox 布局 */
+      /*justify-content: center; !* 水平居中 *!*/
+      /*text-align: center;*/
+    }
+
+    #navigate_content li {
+      /*margin-right: 20px; !* 间距 *!*/
+    }
+
+    #navigate_content li:last-child {
+      margin-right: 0; /* 最后一个列表项不设置右边距 */
+    }
+
+    #navigate_content li a {
+      display: block;
+      color: white;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+    }
+
+    nav ul li a:hover {
+      background-color: #555; /* 鼠标悬停时的背景色 */
+    }
+
+    .user-profile {
+      margin-left: auto; /* 将用户显示区域推到导航栏的最右侧 */
+    }
+
+
+
+  </style>
+
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container">-->
+<!--<nav>-->
+<!--  <ul id="navigate_content">-->
+<!--    <li><a href="#">首页</a></li>-->
+<!--    <li><a href="#">关于我们</a></li>-->
+<!--    <li><a href="#">服务</a></li>-->
+<!--    <li><a href="#">联系我们</a></li>-->
+<!--    <li style="float:right"><a href="#">用户</a></li>-->
+<!--  </ul>-->
+
+<!--</nav>-->
+<!--</div>-->
+<!--<div class="content">-->
+<!--  &lt;!&ndash; 这里放置网页内容 &ndash;&gt;-->
+<!--</div>-->
+<!--</body>-->
+<!--</html>-->
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>菜鸟教程(runoob.com)</title>
+
+<style>
+  .header {
+    display: flex;
+    width: 100%;
+    /*justify-content: space-between;*/
+    /*align-items: center;*/
+    /*padding: 10px 20px;*/
+    background-color: #0078d4;
+    color: white;
+    position: fixed;
+    top: 0;
+    z-index: 10000;
+
+  }
+
+  #header_nav {
+    margin-left: 10%;
+    margin-right: 5%;
+    width: 80%;
+    height: 7%;
+    background-color: aquamarine;
+    display: inline-block;
+
+
+    /*display: flex;*/
+    /*justify-content: space-between;*/
+    /*align-items: center;*/
+    /*padding: 10px 20px;*/
+  }
+
+  #header_nav ul{
+    list-style-type: none;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    display: flex; /* 使用 Flexbox 布局 */
+
+  }
+
+  #nav_content {
+    float: left;
+  }
+
+
+  #header_nav li:last-child {
+    margin-right: 0; /* 最后一个列表项不设置右边距 */
+  }
+
+  #header_nav li a {
+    display: block;
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
+
+  #header_nav li a:hover:not(.active) {
+    background-color: #555; /* 鼠标悬停时的背景色 */
+  }
+
+  #header_nav li a:active {
+    background-color: #982f13;
+  }
+
+
+  #user_content{
+
+    float: right;
+  }
+
+  #nav_div{
+    position: relative;
+    left: 0;
+  }
+
+  #user_div{
+    position: relative;
+    right: 0;
+  }
+
+
+
+
+
+
+  #about_div {
+    display: flex;
+    position: absolute;
+    margin-left: 15%;
+    top: 7%;
+    height: 90%; /* 设置容器高度为视口高度 */
+  }
+
+  #about_nav {
+    flex: 0 0 20%; /* 左侧导航栏占据20%的宽度 */
+    background-color: #f0f0f0;
+  }
+
+  #about_nav ul{
+    list-style-type: none;
+  }
+
+  #about_nav ul a{
+    list-style: none;
+    text-decoration: none;
+  }
+
+
+
+  #about_content {
+    flex: 1; /* 右侧内容区域占据剩余的宽度 */
+    padding: 20px;
+  }
+
+  .teacher-info {
+    text-align: center; /* 居中显示 */
+  }
+
+  .member {
+    display: flex;
+    flex-wrap: wrap; /* 允许成员信息自动换行 */
+    justify-content: space-between; /* 在每行中平均分配空间 */
+    margin: 10px 0;
+
+  }
+
+  .member-item {
+    width: calc(31% - 10px); /* 每个成员信息项占据50%的宽度，减去间距 */
+    margin-bottom: 10px;
+    margin-top: 10px;
+    padding-left: 2%;
+    display: flex; /* 使用 Flexbox 布局 */
+    align-items: center; /* 垂直居中 */
+    border: 3px solid black;
+  }
+
+  .member-item div {
+    /*margin-left: 3%;*/
+
+    /*width: 200px;*/
+    padding: 3%;
+    width: calc(100% - 100px);
+  }
+
+  .member-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* 圆形头像 */
+    margin-right: 10px; /* 右侧留出间距 */
+  }
+
+  .divider {
+    width: 10%; /* 设置分割线宽度 */
+    height: 2%; /* 设置分割线高度 */
+    background-color: #eacd76;/*割线颜色 */
+    margin: 20px 0; /* 设置分割线与上下内容的间距 */
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 18px;
+  }
+
+  /*#page_container {*/
+  /*  display: flex;*/
+  /*  flex-direction: column;*/
+  /*  height: 100vh; !* 设置容器高度为视口高度 *!*/
+
+  /*}*/
+
+</style>
+
+
+</head>
+<body style="margin: 0">
+
+<div id="page_container">
+  <div class="header ">
+    <div id="header_nav">
+      <div id="nav_div">
+        <ul id="nav_content">
+          <li><a href="#">首页</a></li>
+          <li><a href="#">部件渲染</a></li>
+          <li><a href="#">书写练习</a></li>
+          <li><a href="#" onclick="test()">融入渲染</a></li>
+          <li><a href="#" onclick="test()">关于</a></li>
+        </ul>
+      </div>
+      <div id="user_div">
+        <ul id="user_content">
+          <li><a href="#" onclick="test()">用户</a></li>
+        </ul>
+      </div>
+
+
+    </div>
+
+  </div>
+
+  <div id="about_div">
+<!--    <div id="about_nav">-->
+<!--      &lt;!&ndash; 左侧导航栏 &ndash;&gt;-->
+<!--      <ul>-->
+<!--        <li><a href="#">导航项1</a></li>-->
+<!--        <li><a href="#">导航项2</a></li>-->
+<!--        <li><a href="#">导航项3</a></li>-->
+<!--        &lt;!&ndash; 添加更多导航项 &ndash;&gt;-->
+<!--      </ul>-->
+<!--    </div>-->
+    <div id="about_content">
+      <!-- 右侧内容区域 -->
+      <div class="divider">指导教师</div> <!-- 添加分割线 -->
+      <div class="member">
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <!-- 指导老师信息 -->
+        <!--      <h2>指导老师</h2>-->
+        <!--      <div>老师姓名</div>-->
+        <!--      <div>老师简介</div>-->
+      </div>
+      <div class="divider">开发成员</div> <!-- 添加分割线 -->
+      <div class="member">
+        <!-- 学生成员信息 -->
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <div class="member-item">
+          <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+          <div>
+            <div>成员姓名</div>
+            <div>成员简介</div>
+          </div>
+        </div>
+        <!-- 添加更多成员信息项 -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<script>
+  function test() {
+    // 在这里执行你的 JavaScript 函数逻辑
+    alert('调用了 test() 函数！');
+  }
+</script>
+
+</body>
+</html>

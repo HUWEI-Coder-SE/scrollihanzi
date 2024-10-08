@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>竖直布局</title>
+  <style>
+    .container {
+      display: flex;
+      height: 100vh; /* 设置容器高度为视口高度 */
+    }
+
+    .nav {
+      flex: 0 0 20%; /* 左侧导航栏占据20%的宽度 */
+      background-color: #f0f0f0;
+    }
+
+    .nav ul{
+      list-style-type: none;
+    }
+
+    .nav ul a{
+      list-style: none;
+      text-decoration: none;
+    }
+
+
+    .content {
+      flex: 1; /* 右侧内容区域占据剩余的宽度 */
+      padding: 20px;
+    }
+
+    .teacher-info {
+      text-align: center; /* 居中显示 */
+    }
+
+    .member {
+      display: flex;
+      flex-wrap: wrap; /* 允许成员信息自动换行 */
+      justify-content: space-between; /* 在每行中平均分配空间 */
+    }
+
+    .member-item {
+      width: calc(31% - 10px); /* 每个成员信息项占据50%的宽度，减去间距 */
+      margin-bottom: 20px;
+      padding-left: 2%;
+      display: flex; /* 使用 Flexbox 布局 */
+      align-items: center; /* 垂直居中 */
+    }
+
+    .member-item div {
+      /*margin-left: 3%;*/
+
+      /*width: 200px;*/
+      padding: 3%;
+      width: calc(100% - 100px);
+    }
+
+    .member-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%; /* 圆形头像 */
+      margin-right: 10px; /* 右侧留出间距 */
+    }
+
+    .divider {
+      width: 100%; /* 设置分割线宽度 */
+      height: 2%; /* 设置分割线高度 */
+      background-color: #eacd76;/*割线颜色 */
+      margin: 20px 0; /* 设置分割线与上下内容的间距 */
+      padding-left: 10px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="nav">
+    <!-- 左侧导航栏 -->
+    <ul>
+      <li><a href="#">导航项1</a></li>
+      <li><a href="#">导航项2</a></li>
+      <li><a href="#">导航项3</a></li>
+      <!-- 添加更多导航项 -->
+    </ul>
+  </div>
+  <div class="content">
+    <!-- 右侧内容区域 -->
+    <div class="divider">指导教师</div> <!-- 添加分割线 -->
+    <div class="member">
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <!-- 指导老师信息 -->
+<!--      <h2>指导老师</h2>-->
+<!--      <div>老师姓名</div>-->
+<!--      <div>老师简介</div>-->
+    </div>
+    <div class="divider">开发成员</div> <!-- 添加分割线 -->
+    <div class="member">
+      <!-- 学生成员信息 -->
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <div class="member-item">
+        <img src="avatar1.jpg" alt="成员头像" class="member-avatar">
+        <div>
+          <div>成员姓名</div>
+          <div>成员简介</div>
+        </div>
+      </div>
+      <!-- 添加更多成员信息项 -->
+    </div>
+  </div>
+</div>
+</body>
+</html>

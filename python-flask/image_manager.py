@@ -51,6 +51,37 @@ def create_tables():
 def connect_db():
     return sqlite3.connect('scrollDB.db')
 
+def create_user(openid):
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO userID_openID (openID) VALUES (?)", (openid,))
+        conn.commit()
+        user_id = cur.lastrowid
+        return user_id
+    except Exception as e:
+        print(f"创建用户时发生错误: {e}")
+        return None
+    finally:
+        conn.close()
+
+def insert_image_info(user_id, picture_id):
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cur.execute("""
+            INSERT INTO scrollUser (userID, pictureID, time) VALUES (?, ?, ?)
+        """, (user_id, picture_id, current_time))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"插入图片信息时发生错误: {e}")
+        return False
+    finally:
+        conn.close()
+
+
 def get_last_assignment_id():
     conn = connect_db()
     cur = conn.cursor()
@@ -100,13 +131,13 @@ def update_image_url(assignment_id, img_url, picture_id):
     finally:
         conn.close()
 
-def insert_prompt_character(prompt, character,components,  current_time):
+def insert_prompt_character(prompt, character, components, current_time, user_id):
     conn = connect_db()
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO scrollUser (prompt, character, components,time) VALUES (?, ?, ?)
-        """, (prompt, character, components,current_time))
+            INSERT INTO scrollUser (prompt, character, components, time, userID) VALUES (?, ?, ?, ?, ?)
+        """, (prompt, character, components, current_time, user_id))
         conn.commit()
         return True
     except Exception as e:
@@ -114,6 +145,7 @@ def insert_prompt_character(prompt, character,components,  current_time):
         return False
     finally:
         conn.close()
+
 
 def get_user_images(user_id):
     conn = connect_db()

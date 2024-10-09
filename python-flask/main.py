@@ -5,6 +5,7 @@ import image_manager
 
 app = Flask(__name__)
 
+# 绑定openID与图片的接口
 @app.route('/bind_openid_to_picture', methods=['POST'])
 def bind_openid_to_picture():
     data = request.get_json()
@@ -12,22 +13,21 @@ def bind_openid_to_picture():
     picture_id = data.get('pictureID')
 
     if not open_id or not picture_id:
-        return jsonify({'status': 'error', 'message': 'openID或pictureID缺失'}), 400
+        return jsonify({'status': 'error', 'message': 'openID:{0}或pictureID:{1}缺失'.format(open_id, picture_id)}), 400
 
     user_id = image_manager.get_user_id_by_openid(open_id)
 
     if user_id is None:
-        # 创建新的用户记录
-        user_id = image_manager.create_user(open_id)
-        if user_id is None:
-            return jsonify({'status': 'error', 'message': '创建用户失败'}), 500
+        return jsonify({'status': 'error', 'message': '未找到对应的userID'}), 400
 
-    success = image_manager.insert_image_info(user_id, picture_id)
+    # 使用新的更新函数
+    success = image_manager.update_userid_by_pictureid(user_id, picture_id)
 
     if success:
-        return jsonify({'status': 'success', 'message': '绑定成功并插入图片信息'})
+        return jsonify({'status': 'success', 'message': '绑定成功并更新图片信息'})
     else:
-        return jsonify({'status': 'error', 'message': '插入图片信息失败'}), 500
+        return jsonify({'status': 'error', 'message': '更新图片信息失败'}), 500
+
 
 
 

@@ -65,21 +65,21 @@ def create_user(openid):
     finally:
         conn.close()
 
-def insert_image_info(user_id, picture_id):
+def update_userid_by_pictureid(user_id, picture_id):
     conn = connect_db()
     cur = conn.cursor()
     try:
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cur.execute("""
-            INSERT INTO scrollUser (userID, pictureID, time) VALUES (?, ?, ?)
-        """, (user_id, picture_id, current_time))
+            UPDATE scrollUser SET userID = ? WHERE pictureID = ?
+        """, (user_id, picture_id))
         conn.commit()
         return True
     except Exception as e:
-        print(f"插入图片信息时发生错误: {e}")
+        print(f"更新 userID 时发生错误: {e}")
         return False
     finally:
         conn.close()
+
 
 
 def get_last_assignment_id():

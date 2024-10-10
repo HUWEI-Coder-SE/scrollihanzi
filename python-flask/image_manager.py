@@ -30,7 +30,7 @@ def create_tables():
     cur.execute('''
         CREATE TABLE IF NOT EXISTS scrollUser (
             pictureID INTEGER,
-            imgURL TEXT NOT NULL,
+            imgURL TEXT,
             time TEXT NOT NULL,
             prompt TEXT,
             character TEXT,
@@ -81,20 +81,6 @@ def update_userid_by_pictureid(user_id, picture_id):
         conn.close()
 
 
-
-def get_last_assignment_id():
-    conn = connect_db()
-    cur = conn.cursor()
-    try:
-        cur.execute("SELECT MAX(assignmentID) FROM scrollUser")
-        row = cur.fetchone()
-        return row[0] if row else None
-    except Exception as e:
-        print(f"获取最后的 assignmentID 时发生错误: {e}")
-        return None
-    finally:
-        conn.close()
-
 # 上传图片到 OSS，并生成随机 `pictureID`
 def upload_image_to_oss(local_image_path):
     try:
@@ -131,20 +117,26 @@ def update_image_url(assignment_id, img_url, picture_id):
     finally:
         conn.close()
 
-def insert_prompt_character(prompt, character, components, current_time, user_id):
+def insert_prompt_character(prompt, character, components, current_time):
     conn = connect_db()
     cur = conn.cursor()
     try:
+        # 将 components 列表转换为逗号分隔的字符串
+        components_str = ','.join(components)
         cur.execute("""
-            INSERT INTO scrollUser (prompt, character, components, time, userID) VALUES (?, ?, ?, ?, ?)
-        """, (prompt, character, components, current_time, user_id))
+            INSERT INTO scrollUser (prompt, character, components, time)
+            VALUES (?, ?, ?, ?)
+        """, (prompt, character, components_str, current_time))
         conn.commit()
-        return True
+        assignment_id = cur.lastrowid  # 获取插入的 assignmentID
+        return assignment_id
     except Exception as e:
         print(f"插入发生错误: {e}")
-        return False
+        return None
     finally:
         conn.close()
+
+
 
 
 def get_user_images(user_id):
@@ -156,14 +148,14 @@ def get_user_images(user_id):
 
         images = [
             {
-                'userID': row[0],
-                'pictureID': row[1],
-                'imgURL': row[2],
-                'time': row[3],
-                'prompt': row[4],
-                'character': row[5],
+                'pictureID': row[0],
+                'imgURL': row[1],
+                'time': row[2],
+                'prompt': row[3],
+                'character': row[4],
+                'userID': row[5],
                 'assignmentID': row[6],
-                'components': row[7]
+                'components': row[7].split(',') if row[7] else []
             } for row in rows
         ]
         return images
@@ -172,6 +164,7 @@ def get_user_images(user_id):
         return None
     finally:
         conn.close()
+
 
 def get_user_id_by_openid(openid):
     conn = connect_db()
@@ -185,5 +178,35 @@ def get_user_id_by_openid(openid):
         return None
     finally:
         conn.close()
+
+def get_record_by_assignment_id(assignment_id):
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT * FROM scrollUser WHERE assignmentID = ?", (assignment_id,))
+        row = cur.fetchone()
+        if row:
+            # 将 components 字符串转换回列表
+            components_list = row[7].split(',') if row[7] else []
+            record = {
+                'pictureID': row[0],
+                'imgURL': row[1],
+                'time': row[2],
+                'prompt': row[3],
+                'character': row[4],
+                'userID': row[5],
+                'assignmentID': row[6],
+                'components': components_list
+            }
+            return record
+        else:
+            return None
+    except Exception as e:
+        print(f"获取记录时发生错误: {e}")
+        return None
+    finally:
+        conn.close()
+
+
 
 create_tables()

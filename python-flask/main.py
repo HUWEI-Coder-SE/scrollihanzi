@@ -36,27 +36,16 @@ def upload_prompt_character():
     data = request.get_json()
     prompt = data.get('prompt', '')
     character = data.get('character', '')
-    components = data.get('components', [])
-    open_id = data.get('openID')
-
-    if not open_id:
-        return jsonify({'status': 'error', 'message': '缺少openID'}), 400
-
-    # 获取或创建 user_id
-    user_id = image_manager.get_user_id_by_openid(open_id)
-    if user_id is None:
-        user_id = image_manager.create_user(open_id)
-        if user_id is None:
-            return jsonify({'status': 'error', 'message': '创建用户失败'}), 500
+    components = data.get('components', '')
 
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    success = image_manager.insert_prompt_character(prompt, character, components, current_time, user_id)
+    assignment_id = image_manager.insert_prompt_character(prompt, character, components, current_time)
 
-    if success:
-        assignment_id = image_manager.get_last_assignment_id()
+    if assignment_id:
         return jsonify({'status': 'success', 'assignmentID': assignment_id})
     else:
         return jsonify({'status': 'error', 'message': '插入信息失败'}), 500
+
 
 
 
@@ -102,6 +91,21 @@ def get_user_images():
         return jsonify({'status': 'success', 'images': images})
     else:
         return jsonify({'status': 'error', 'message': '未找到用户图片信息'}), 404
+
+# 获取指定 assignmentID 的记录
+@app.route('/get_data', methods=['GET'])
+def get_data():
+    assignment_id = request.args.get('assignmentID')
+    
+    if not assignment_id:
+        return jsonify({'status': 'error', 'message': '缺少assignmentID'}), 400
+    
+    record = image_manager.get_record_by_assignment_id(assignment_id)
+    
+    if record:
+        return jsonify({'status': 'success', 'data': record})
+    else:
+        return jsonify({'status': 'error', 'message': '未找到对应的记录'}), 404
 
 
 if __name__ == '__main__':

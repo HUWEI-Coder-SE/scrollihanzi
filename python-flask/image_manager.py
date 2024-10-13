@@ -2,12 +2,13 @@ import os
 import oss2
 import sqlite3
 import random
+import base64
 from datetime import datetime
 
 # 配置 OSS 相关参数
-OSS_ACCESS_KEY_ID = ''
-OSS_ACCESS_KEY_SECRET = ''
-OSS_BUCKET_NAME = ''
+OSS_ACCESS_KEY_ID = 'your-access-key-id'
+OSS_ACCESS_KEY_SECRET = 'your-access-key-secret'
+OSS_BUCKET_NAME = 'your-bucket-name'
 OSS_ENDPOINT = 'https://oss-cn-shanghai.aliyuncs.com'
 
 # 初始化 OSS 客户端
@@ -30,7 +31,7 @@ def create_tables():
     cur.execute('''
         CREATE TABLE IF NOT EXISTS scrollUser (
             pictureID INTEGER,
-            imgURL TEXT,
+            ossImagePath TEXT,
             time TEXT NOT NULL,
             prompt TEXT,
             character TEXT,
@@ -65,6 +66,31 @@ def create_user(openid):
     finally:
         conn.close()
 
+def generate_random_user_id():
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        while True:
+            user_id = random.randint(1000000000, 9999999999)  # 生成10位随机数字
+            cur.execute("SELECT 1 FROM userID_openID WHERE userID = ?", (user_id,))
+            if cur.fetchone() is None:
+                return user_id
+    finally:
+        conn.close()
+
+def create_user_with_id(user_id, openid):
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO userID_openID (userID, openID) VALUES (?, ?)", (user_id, openid))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"创建用户时发生错误: {e}")
+        return False
+    finally:
+        conn.close()
+
 def update_userid_by_pictureid(user_id, picture_id):
     conn = connect_db()
     cur = conn.cursor()
@@ -80,39 +106,43 @@ def update_userid_by_pictureid(user_id, picture_id):
     finally:
         conn.close()
 
-
 # 上传图片到 OSS，并生成随机 `pictureID`
-def upload_image_to_oss(local_image_path):
+def upload_image_to_oss(assignment_id, image_base64):
     try:
-        if not os.path.exists(local_image_path):
-            raise FileNotFoundError(f"本地文件不存在: {local_image_path}")
+        # 解码 base64 图片数据
+        image_data = base64.b64decode(image_base64)
 
+        # 生成 picture_id
         picture_id = random.randint(100000000, 999999999)
+
+        # 设置文件夹名称
         folder_name = datetime.now().strftime('%Y-%m-%d')
-        image_name = os.path.basename(local_image_path)
+
+        # 使用 assignment_id 作为图片名称
+        image_name = str(assignment_id)
         oss_image_path = f"{folder_name}/{image_name}"
 
-        with open(local_image_path, 'rb') as image_file:
-            bucket.put_object(oss_image_path, image_file)
+        # 直接将图片数据上传到 OSS
+        bucket.put_object(oss_image_path, image_data)
 
-        img_url = bucket.sign_url('GET', oss_image_path, 60 * 60 * 24 * 365)
-        return picture_id, img_url
+        # 返回 picture_id 和 oss_image_path
+        return picture_id, oss_image_path
 
     except Exception as e:
         print(f"上传图片时发生错误: {e}")
         return None, None
 
-def update_image_url(assignment_id, img_url, picture_id):
+def update_image_url(assignment_id, oss_image_path, picture_id):
     conn = connect_db()
     cur = conn.cursor()
     try:
         cur.execute("""
-            UPDATE scrollUser SET imgURL = ?, pictureID = ? WHERE assignmentID = ?
-        """, (img_url, picture_id, assignment_id))
+            UPDATE scrollUser SET ossImagePath = ?, pictureID = ? WHERE assignmentID = ?
+        """, (oss_image_path, picture_id, assignment_id))
         conn.commit()
         return True
     except Exception as e:
-        print(f"更新图片URL时发生错误: {e}")
+        print(f"更新图片路径时发生错误: {e}")
         return False
     finally:
         conn.close()
@@ -136,9 +166,6 @@ def insert_prompt_character(prompt, character, components, current_time):
     finally:
         conn.close()
 
-
-
-
 def get_user_images(user_id):
     conn = connect_db()
     cur = conn.cursor()
@@ -149,7 +176,7 @@ def get_user_images(user_id):
         images = [
             {
                 'pictureID': row[0],
-                'imgURL': row[1],
+                'ossImagePath': row[1],
                 'time': row[2],
                 'prompt': row[3],
                 'character': row[4],
@@ -164,7 +191,6 @@ def get_user_images(user_id):
         return None
     finally:
         conn.close()
-
 
 def get_user_id_by_openid(openid):
     conn = connect_db()
@@ -190,7 +216,7 @@ def get_record_by_assignment_id(assignment_id):
             components_list = row[7].split(',') if row[7] else []
             record = {
                 'pictureID': row[0],
-                'imgURL': row[1],
+                'ossImagePath': row[1],
                 'time': row[2],
                 'prompt': row[3],
                 'character': row[4],
@@ -207,6 +233,28 @@ def get_record_by_assignment_id(assignment_id):
     finally:
         conn.close()
 
+def get_oss_image_path_by_assignment_id(assignment_id):
+    conn = connect_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT ossImagePath FROM scrollUser WHERE assignmentID = ?", (assignment_id,))
+        row = cur.fetchone()
+        if row:
+            return row[0]
+        else:
+            return None
+    except Exception as e:
+        print(f"获取oss_image_path时发生错误: {e}")
+        return None
+    finally:
+        conn.close()
 
+def get_signed_url(oss_image_path, expire_time=60 * 60 * 24 * 7):  # 默认7天有效期
+    try:
+        signed_url = bucket.sign_url('GET', oss_image_path, expire_time)
+        return signed_url
+    except Exception as e:
+        print(f"获取签名URL时发生错误: {e}")
+        return None
 
 create_tables()

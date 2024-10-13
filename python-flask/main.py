@@ -18,17 +18,20 @@ def bind_openid_to_picture():
     user_id = image_manager.get_user_id_by_openid(open_id)
 
     if user_id is None:
-        return jsonify({'status': 'error', 'message': '未找到对应的userID'}), 400
+        # 生成一个随机的10位数字作为user_id
+        user_id = image_manager.generate_random_user_id()
+        # 创建新的用户记录
+        success = image_manager.create_user_with_id(user_id, open_id)
+        if not success:
+            return jsonify({'status': 'error', 'message': '创建用户失败'}), 500
 
-    # 使用新的更新函数
+    # 使用更新函数
     success = image_manager.update_userid_by_pictureid(user_id, picture_id)
 
     if success:
         return jsonify({'status': 'success', 'message': '绑定成功并更新图片信息'})
     else:
         return jsonify({'status': 'error', 'message': '更新图片信息失败'}), 500
-
-
 
 
 @app.route('/upload_prompt_character', methods=['POST'])
@@ -47,9 +50,7 @@ def upload_prompt_character():
         return jsonify({'status': 'error', 'message': '插入信息失败'}), 500
 
 
-
-
-# 上传接口2：处理图片上传
+# 上传接口：处理图片上传
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     data = request.get_json()
@@ -59,16 +60,12 @@ def upload_image():
     if not assignment_id or not image_base64:
         return jsonify({'status': 'error', 'message': '缺少assignmentID或图片数据'}), 400
 
-    local_image_path = "temp_image.png"
-    with open(local_image_path, "wb") as fh:
-        fh.write(base64.b64decode(image_base64))
+    picture_id, oss_image_path = image_manager.upload_image_to_oss(assignment_id, image_base64)
 
-    picture_id, img_url = image_manager.upload_image_to_oss(local_image_path)
-
-    if picture_id and img_url:
-        success = image_manager.update_image_url(assignment_id, img_url, picture_id)
+    if picture_id and oss_image_path:
+        success = image_manager.update_image_url(assignment_id, oss_image_path, picture_id)
         if success:
-            return jsonify({'status': 'success', 'pictureID': picture_id, 'imgURL': img_url})
+            return jsonify({'status': 'success', 'pictureID': picture_id, 'ossImagePath': oss_image_path})
         else:
             return jsonify({'status': 'error', 'message': '更新数据库失败'}), 500
     else:
@@ -92,20 +89,39 @@ def get_user_images():
     else:
         return jsonify({'status': 'error', 'message': '未找到用户图片信息'}), 404
 
+
 # 获取指定 assignmentID 的记录
 @app.route('/get_data', methods=['GET'])
 def get_data():
     assignment_id = request.args.get('assignmentID')
-    
+
     if not assignment_id:
         return jsonify({'status': 'error', 'message': '缺少assignmentID'}), 400
-    
+
     record = image_manager.get_record_by_assignment_id(assignment_id)
-    
+
     if record:
         return jsonify({'status': 'success', 'data': record})
     else:
         return jsonify({'status': 'error', 'message': '未找到对应的记录'}), 404
+
+
+# 新增接口：获取图片的签名URL
+@app.route('/get_image_url', methods=['GET'])
+def get_image_url():
+    assignment_id = request.args.get('assignmentID')
+
+    if not assignment_id:
+        return jsonify({'status': 'error', 'message': '缺少assignmentID'}), 400
+
+    # 获取 ossImagePath
+    oss_image_path = image_manager.get_oss_image_path_by_assignment_id(assignment_id)
+    if oss_image_path:
+        # 生成签名URL
+        signed_url = image_manager.get_signed_url(oss_image_path)
+        return jsonify({'status': 'success', 'imageURL': signed_url})
+    else:
+        return jsonify({'status': 'error', 'message': '未找到对应的图片路径'}), 404
 
 
 if __name__ == '__main__':

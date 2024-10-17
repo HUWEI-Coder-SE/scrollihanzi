@@ -2,8 +2,14 @@ import base64
 from flask import Flask, request, jsonify
 from datetime import datetime
 import image_manager
+import requests
 
 app = Flask(__name__)
+
+app_secrets = {
+    'wx636d1daf20b6a276': 'b44f134d6e7a7fd0a071badf50d33567',
+}
+
 
 # 绑定openID与图片的接口
 @app.route('/bind_openid_to_picture', methods=['POST'])
@@ -50,7 +56,7 @@ def upload_prompt_character():
         return jsonify({'status': 'error', 'message': '插入信息失败'}), 500
 
 
-# 上传接口：处理图片上传
+# 上传接口：处理图片上传，增加对重复上传的校验
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     data = request.get_json()
@@ -59,6 +65,11 @@ def upload_image():
 
     if not assignment_id or not image_base64:
         return jsonify({'status': 'error', 'message': '缺少assignmentID或图片数据'}), 400
+
+    # 检查该 assignmentID 是否已经绑定了图片
+    existing_record = image_manager.get_record_by_assignment_id(assignment_id)
+    if existing_record and existing_record.get('pictureID'):
+        return jsonify({'status': 'error', 'message': '该 assignmentID 已经绑定了图片，无法覆盖'}), 400
 
     picture_id, oss_image_path = image_manager.upload_image_to_oss(assignment_id, image_base64)
 
@@ -72,7 +83,44 @@ def upload_image():
         return jsonify({'status': 'error', 'message': '图片上传失败'}), 500
 
 
-# 获取用户生成的所有图片及信息
+# 微信登录接口
+@app.route('/wechat_login', methods=['POST'])
+def wechat_login():
+    data = request.get_json()
+
+    app_id = data.get('appID')  # 从小程序端获取的appID
+    code = data.get('code')  # 从小程序端获取的用户临时ID (code)
+
+    if not app_id or not code:
+        return jsonify({'status': 'error', 'message': '缺少appID或code参数'}), 400
+
+    # 根据appID查找对应的appSecret
+    app_secret = app_secrets.get(app_id)
+    if not app_secret:
+        return jsonify({'status': 'error', 'message': '无效的appID'}), 400
+
+    # 构建微信API URL
+    url = f'https://api.weixin.qq.com/sns/jscode2session?appid={app_id}&secret={app_secret}&js_code={code}&grant_type=authorization_code'
+
+    try:
+        # 发送请求给微信服务器
+        response = requests.get(url)
+        data = response.json()
+
+        if 'errcode' in data:
+            return jsonify({'status': 'error', 'message': data['errmsg']}), 400
+
+        open_id = data.get('openid')  # 获取openid
+        # session_key = data.get('session_key')  # 获取session_key (如果需要使用)
+
+        # 返回openid给小程序
+        return jsonify({'status': 'success', 'openId': open_id})
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'微信登录请求失败: {str(e)}'}), 500
+
+
+# 获取用户生成的所有图片及信息，返回包含临时签名URL的imageURL
 @app.route('/get_user_images', methods=['GET'])
 def get_user_images():
     open_id = request.args.get('openID')
@@ -90,7 +138,7 @@ def get_user_images():
         return jsonify({'status': 'error', 'message': '未找到用户图片信息'}), 404
 
 
-# 获取指定 assignmentID 的记录
+# 获取指定 assignmentID 的记录，返回包含临时签名URL的imageURL
 @app.route('/get_data', methods=['GET'])
 def get_data():
     assignment_id = request.args.get('assignmentID')
@@ -106,23 +154,6 @@ def get_data():
         return jsonify({'status': 'error', 'message': '未找到对应的记录'}), 404
 
 
-# 新增接口：获取图片的签名URL
-@app.route('/get_image_url', methods=['GET'])
-def get_image_url():
-    assignment_id = request.args.get('assignmentID')
-
-    if not assignment_id:
-        return jsonify({'status': 'error', 'message': '缺少assignmentID'}), 400
-
-    # 获取 ossImagePath
-    oss_image_path = image_manager.get_oss_image_path_by_assignment_id(assignment_id)
-    if oss_image_path:
-        # 生成签名URL
-        signed_url = image_manager.get_signed_url(oss_image_path)
-        return jsonify({'status': 'success', 'imageURL': signed_url})
-    else:
-        return jsonify({'status': 'error', 'message': '未找到对应的图片路径'}), 404
-
-
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=6000, debug=True)
+

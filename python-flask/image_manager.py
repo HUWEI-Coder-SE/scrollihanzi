@@ -119,7 +119,7 @@ def upload_image_to_oss(assignment_id, image_base64):
         folder_name = datetime.now().strftime('%Y-%m-%d')
 
         # 使用 assignment_id 作为图片名称
-        image_name = str(assignment_id)
+        image_name = f"{assignment_id}.png"
         oss_image_path = f"{folder_name}/{image_name}"
 
         # 直接将图片数据上传到 OSS
@@ -173,18 +173,23 @@ def get_user_images(user_id):
         cur.execute("SELECT * FROM scrollUser WHERE userID = ?", (user_id,))
         rows = cur.fetchall()
 
-        images = [
-            {
+        images = []
+        for row in rows:
+            # 获取签名的 imageURL
+            oss_image_path = row[1]
+            image_url = get_signed_url(oss_image_path) if oss_image_path else None
+
+            image_data = {
                 'pictureID': row[0],
-                'ossImagePath': row[1],
+                'imageURL': image_url,
                 'time': row[2],
                 'prompt': row[3],
                 'character': row[4],
                 'userID': row[5],
                 'assignmentID': row[6],
                 'components': row[7].split(',') if row[7] else []
-            } for row in rows
-        ]
+            }
+            images.append(image_data)
         return images
     except Exception as e:
         print(f"获取用户图片信息时发生错误: {e}")
@@ -214,9 +219,14 @@ def get_record_by_assignment_id(assignment_id):
         if row:
             # 将 components 字符串转换回列表
             components_list = row[7].split(',') if row[7] else []
+
+            # 获取签名的 imageURL
+            oss_image_path = row[1]
+            image_url = get_signed_url(oss_image_path) if oss_image_path else None
+
             record = {
                 'pictureID': row[0],
-                'ossImagePath': row[1],
+                'imageURL': image_url,
                 'time': row[2],
                 'prompt': row[3],
                 'character': row[4],
@@ -229,22 +239,6 @@ def get_record_by_assignment_id(assignment_id):
             return None
     except Exception as e:
         print(f"获取记录时发生错误: {e}")
-        return None
-    finally:
-        conn.close()
-
-def get_oss_image_path_by_assignment_id(assignment_id):
-    conn = connect_db()
-    cur = conn.cursor()
-    try:
-        cur.execute("SELECT ossImagePath FROM scrollUser WHERE assignmentID = ?", (assignment_id,))
-        row = cur.fetchone()
-        if row:
-            return row[0]
-        else:
-            return None
-    except Exception as e:
-        print(f"获取oss_image_path时发生错误: {e}")
         return None
     finally:
         conn.close()
